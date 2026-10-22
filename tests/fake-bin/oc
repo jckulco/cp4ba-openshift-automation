@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# oc falso para pruebas offline. FAKE_OC_MODE controla el comportamiento.
+case "$1" in
+  apply)  # falla N veces con el error del webhook de PG y luego funciona
+    f="${FAKE_OC_COUNTER:-/tmp/fake-oc-counter}"; n=$(cat "$f" 2>/dev/null || echo 0); n=$((n+1)); echo "$n" > "$f"
+    if [ "$n" -le "${FAKE_OC_FAILS:-0}" ]; then echo 'Error from server (InternalError): failed calling webhook "vpooler.pg.ibm.com": connection refused' >&2; exit 1; fi
+    echo "applied"; exit 0 ;;
+  whoami) echo kube:admin ;;
+  get)
+    case "$2" in
+      csv) case "${FAKE_OC_MODE:-none}" in
+             none) ;;
+             ok) echo "ibm-cp4a-operator.v26.0.2   IBM CP4BA   26.0.2   Succeeded"; echo "ibm-workflow-operator.v26.0.2   IBM WF   26.0.2   Succeeded" ;;
+             old) echo "ibm-cp4a-operator.v26.0.0   IBM CP4BA   26.0.0   Succeeded" ;;
+             failing) echo "ibm-cp4a-operator.v26.0.2   IBM CP4BA   26.0.2   Installing" ;;
+           esac ;;
+      sub) echo "Automatic" ;;
+    esac ;;
+esac
+exit 0

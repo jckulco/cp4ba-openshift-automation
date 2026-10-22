@@ -1,0 +1,45 @@
+# Notas de la sesión de referencia (CP4BA 26.0.0 IF002 en TechZone)
+
+Leyenda: ✅ ejecutado en el cluster · 📄 leído en documentación IBM · 🔎 leído en el código del repo `cert-kubernetes` · ❓ no verificado
+
+## Ambiente
+- OpenShift 4.21.24, 3 masters (8 vCPU/32 GB) + 5 workers (32 vCPU/128 GB). ✅
+- ODF en modo **externo**; StorageClasses `ocs-storagecluster-ceph-rbd` (default, RWO) y `ocs-storagecluster-cephfs` (RWX) aprovisionan ✅ (PVC de prueba).
+- Bastión RHEL 9: 2 vCPU / 7 GB RAM / 284 GB disco. Ajustado si se cargan imágenes grandes con podman.
+- TechZone ya instala `external-secrets-operator`, `itz-deployer-operator` y `openshift-pipelines` ✅ (no son de IBM CP4BA).
+
+## Versión
+- 📄 IF001 (jul-2026) e IF002 (ago-2026) existen; IF002 sustituye a todas. Repo: `git clone -b 26.0.0-IF002 https://github.com/icp4a/cert-kubernetes.git` ✅ (commit 0740107).
+- ✅ Operadores instalados en `cp4ba` a **26.0.2** (CPFS 4.19.2), canal v26.0, aprobación Automatic.
+- 📄 Instalación nueva: namespace sin CPFS previo. "All namespaces" deprecado.
+- 📄 Defectos de IF002 relevantes: DT498940 (instalador falla con IdP externo sin LDAP → usamos LDAP), DT499473 (validación de prefijo de alias de BD en `generate`), DT496592 (PostgreSQL SCRAM channel binding en Workflow).
+- ✅ La entitlement key cubre `cp.icr.io/cp/cp4a` (skopeo list-tags).
+
+## Respuestas dadas a `cp4a-clusteradmin-setup.sh` ✅
+Licencia: la aceptó el usuario · Online · OCP (Private Cloud) · Production · FIPS check: No · catálogo privado: Yes · separar operadores/operandos: No · namespace `cp4ba` · key: Yes (pegada en el prompt) · el script no pidió StorageClasses (las pide después `cp4a-deployment.sh`).
+Instaló: IBM Cert Manager 4.2.23, Licensing 4.2.24, operadores v26.0.2 (cp4a, content, workflow, wfps, pfs, ads, odm, dpe, insights engine, ccx-ai-services, foundation), Redis 1.3.1, Usage Metering 1.0.7.
+
+## Flujo de IBM (🔎 código de los scripts)
+1. `cp4a-clusteradmin-setup.sh` (interactivo) ✅
+2. `cp4a-prerequisites.sh -m property -n cp4ba` → editar properties → `-m generate` → crear BD/secretos → `-m validate`
+3. `cp4a-deployment.sh -n cp4ba` (interactivo; sin modo silencioso; `-m` solo para upgrade). Genera el CR.
+- Mismo patrón que Content Cortex: **no repetir `generate` una vez creadas BD con contraseñas generadas**.
+
+## Base de datos 🔎
+- `DB_TYPE=postgresql-edb` = PostgreSQL gestionado por el operador (CNPG desde 26.0.0 IF001 según el PDF de compatibilidad). Es la opción embebida recomendada. ❓ confirmar en el menú.
+- 📄 Quien usa PostgreSQL externo no puede migrar después al embebido.
+
+## IA en BAW 🔎 (componentes opcionales de Workflow Authoring, producción)
+| Menú | Clave en el CR | Notas |
+|---|---|---|
+| Workflow Assistant | `workplace_assistant` | comparte `workflow_assistant_configuration` (watsonx) |
+| (Preview) Authoring Assistant | `workflow_assistant` | **Preview** |
+| Workflow Runtime MCP Server | `workflow_runtime_mcp_server` | exige `pfs`; con PFS+MCP exige OpenSearch; 📄 endpoints `/process/mcp` y `/case/mcp`, OAuth 2.1 |
+| Data Collector and Data Indexer | `pfs` | |
+- Propiedades `WFA.*`: `WATSONX_URL`, `WATSONX_API_KEY`, **`WATSONX_PROJECT_ID`**, `WATSONX_USERNAME/PASSWORD/TOKEN/VERSION`, `RUN_WORKPLACE_AGENT`, `RUN_AUTHORING_AGENT`, `WATSONX_MODEL_ID`, `WATSONX_DEPLOYMENT_ID`. ❓ Se necesita un *proyecto* de watsonx.ai (no el deployment space de Content Cortex).
+- Machine Learning Server: CRD `businessautomationmachinelearnings` (campos `intelligent_task_prioritization`, `workforce_insights`) y no aparece en el menú de componentes. ❓ cómo se activa.
+- AI Agent Server (M142FML): ❓ sin rastro en el repo. No se descargó nada de Passport Advantage.
+- Autoría añade `cmis` (FileNet/CPE) automáticamente → aplica la lección del GUID de LDAP.
+
+## LDAP de laboratorio
+OpenLDAP (osixia) en `cp4ba-ldap`; usuarios `cp4admin`, `alice` (autora), `bob`; grupos `cp4admins`, `tw_admins`, `tw_authors`, `bawusers`. Contraseñas en `.state/ldap-secrets.env`. Los nombres de grupo se ajustarán cuando veamos los property files reales. SOLO laboratorio.

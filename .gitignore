@@ -1,0 +1,11 @@
+# Secretos y estado local: NUNCA subir a Git
+.state/
+.work/
+*.env
+!config/*.example
+*.pem
+*.p12
+*.jks
+*.log
+*.bak.yaml
+.DS_Store
