@@ -4,7 +4,7 @@
 Uso:  fill-properties.py DIRECTORIO_PROPERTYFILE
 Todos los valores llegan por VARIABLES DE ENTORNO (nunca por argumentos, para que no aparezcan en `ps`):
   FILE_SC BLOCK_SC LDAP_HOST LDAP_PORT LDAP_BASE_DN LDAP_ADMIN_PW PW_CP4ADMIN
-  PW_DB_GCD PW_DB_OS PW_DB_ICN PW_DB_BAS LTPA_CONTENT KS_CONTENT LTPA_BAN KS_BAN
+  PW_DB_GCD PW_DB_OS PW_DB_ICN PW_DB_BAS LTPA_CONTENT KS_CONTENT
   LIC_CP4BA LIC_CONTENT_CORTEX LIC_BAW WXAI_API_KEY WXAI_URL WXAI_PROJECT_ID [WXAI_MODEL_ID]
 Reglas de IBM: valores entre comillas dobles; usuarios/contraseñas sin comilla simple; LDAP/perfil sin comilla doble.
 Solo sustituye claves que YA existen (si IBM cambia el formato, falla con código 3 en vez de inventar claves).
@@ -47,7 +47,8 @@ def plan():
         "CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP": admin_grp,
         "CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME": "pe_conn_bawtos",
         "BAN.APPLOGIN_USER": admin, "BAN.APPLOGIN_PASSWORD": pw,
-        "BAN.LTPA_PASSWORD": env("LTPA_BAN"), "BAN.KEYSTORE_PASSWORD": env("KS_BAN"),
+        # IBM exige CONTENT.LTPA_PASSWORD == BAN.LTPA_PASSWORD (validación de generate); se igualan también los keystore
+        "BAN.LTPA_PASSWORD": env("LTPA_CONTENT"), "BAN.KEYSTORE_PASSWORD": env("KS_CONTENT"),
         "WFA.WATSONX_API_KEY": env("WXAI_API_KEY"),
         "WFA.WATSONX_URL": env("WXAI_URL"),
         "WFA.WATSONX_PROJECT_ID": env("WXAI_PROJECT_ID"),

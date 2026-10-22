@@ -56,3 +56,8 @@ Capacidad: 5a Workflow Authoring (solo) · opcionales: 3 Data Collector and Data
 - Watsonx.ai SaaS: `WFA.WATSONX_API_KEY/URL/PROJECT_ID`; modelo opcional, **por defecto meta-llama/llama-3-3-70b-instruct** (📄). ❓ ese modelo puede estar obsoleto en la región: `tools/test-wxai.py` lo comprueba. Con modelo propio (gpt-oss-120b) ❓ no probado con el asistente. Solo existe `RUNTIME_AGENT_WATSONX_DEPLOYMENT_ID` (para despliegue personalizado).
 - Juicios míos sin verificar: `LC_USER_FILTER` por `uid`; SCIM de grupos a `groupOfNames/member`; grupos de workflow admin/config = `cp4admins`; conexión PE `pe_conn_bawtos`. `SCIM.USER_GROUPS_ATTRIBUTE=memberOf` necesita el overlay memberOf de OpenLDAP (❓ puede no estar activo).
 - IBM pide guardar estos archivos tras el despliegue (se usan en upgrades y al añadir/quitar componentes).
+
+## Primer `generate` (✅ ejecutado; falló en la validación previa)
+- IBM exige `CONTENT.LTPA_PASSWORD` == `BAN.LTPA_PASSWORD` (se igualan también los keystore por prudencia ❓). La fase 04 original los generaba distintos → corregido en `fill-properties.py`.
+- ⚠️ La validación de IBM **imprime los valores** cuando falla: no pegar al chat la salida de `generate`/`validate` sin revisarla. (Las dos LTPA de esa corrida se expusieron y se rotaron.)
+- Con `postgresql-edb` IBM omite la validación de certificados de BD; con LDAP sin SSL omite la del LDAP.

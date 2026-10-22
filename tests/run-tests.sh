@@ -30,7 +30,7 @@ bash tests/make-fixtures.sh "$TMP/pf"
 # valores ficticios ALEATORIOS creados en cada ejecución (nada literal en el repo)
 r() { openssl rand -hex 6; }
 A1=$(r); A2=$(r); A3=$(r); A4=$(r); A5=$(r); A6=$(r); A7=$(r); A8=$(r); A9=$(r)
-FILLENV="FILE_SC=sc-file BLOCK_SC=sc-block LDAP_HOST=ldap.example LDAP_PORT=389 LDAP_BASE_DN=dc=example,dc=org LDAP_ADMIN_PW=$A1 PW_CP4ADMIN=$A2 PW_DB_GCD=$A3 PW_DB_OS=$A4 PW_DB_ICN=$A5 PW_DB_BAS=$A6 LTPA_CONTENT=$A7 KS_CONTENT=$A8 LTPA_BAN=$A9 KS_BAN=$A9 LIC_CP4BA=non-production LIC_CONTENT_CORTEX=non-production LIC_BAW=non-production WXAI_API_KEY=$A1$A2 WXAI_URL=https://us-south.ml.cloud.ibm.com WXAI_PROJECT_ID=pid"
+FILLENV="FILE_SC=sc-file BLOCK_SC=sc-block LDAP_HOST=ldap.example LDAP_PORT=389 LDAP_BASE_DN=dc=example,dc=org LDAP_ADMIN_PW=$A1 PW_CP4ADMIN=$A2 PW_DB_GCD=$A3 PW_DB_OS=$A4 PW_DB_ICN=$A5 PW_DB_BAS=$A6 LTPA_CONTENT=$A7 KS_CONTENT=$A8 LIC_CP4BA=non-production LIC_CONTENT_CORTEX=non-production LIC_BAW=non-production WXAI_API_KEY=$A1$A2 WXAI_URL=https://us-south.ml.cloud.ibm.com WXAI_PROJECT_ID=pid"
 t "--check detecta <Required>" bash -c "python3 -I tools/fill-properties.py --check $TMP/pf; [ \$? -eq 5 ]"
 t "relleno ok y sin <Required>" bash -c "env $FILLENV python3 -I tools/fill-properties.py $TMP/pf >$TMP/o.txt && python3 -I tools/fill-properties.py --check $TMP/pf"
 t "no imprime secretos" bash -c "! grep -qE '$A1|$A2|$A3|$A4' $TMP/o.txt"
@@ -38,6 +38,7 @@ t "corrige el storageclass truncado" bash -c "grep -q '^CP4BA.SLOW_FILE_STORAGE_
 t "LDAP sin TLS y filtro por uid" bash -c "grep -q 'LDAP_SSL_ENABLED=\"False\"' $TMP/pf/cp4ba_LDAP.property && grep -q 'uid=%v' $TMP/pf/cp4ba_LDAP.property"
 t "osuser comparte contraseña en los 3 object stores" bash -c "[ \$(grep -c 'DB_USER_PASSWORD=\"$A4\"' $TMP/pf/cp4ba_db_name_user.property) -eq 3 ]"
 t "SCIM de grupos = groupOfNames/member" bash -c "grep -q 'GROUP_OBJECT_CLASS_ATTRIBUTE=\"groupOfNames\"' $TMP/pf/cp4ba_user_profile.property && grep -q 'GROUP_MEMBERS_ATTRIBUTE=\"member\"' $TMP/pf/cp4ba_user_profile.property"
+t "LTPA y keystore de CONTENT y BAN son iguales (exigencia de IBM)" bash -c "f=$TMP/pf/cp4ba_user_profile.property; [ \"\$(grep '^CONTENT.LTPA_' \$f | cut -d= -f2)\" = \"\$(grep '^BAN.LTPA_' \$f | cut -d= -f2)\" ] && [ \"\$(grep '^CONTENT.KEYSTORE_' \$f | cut -d= -f2)\" = \"\$(grep '^BAN.KEYSTORE_' \$f | cut -d= -f2)\" ]"
 t "conserva comentarios" bash -c "grep -q '^## comentario de ejemplo' $TMP/pf/cp4ba_user_profile.property"
 t "rechaza comilla simple en contraseñas (rc 4)" bash -c "env $FILLENV PW_DB_GCD=\"a'b\" python3 -I tools/fill-properties.py $TMP/pf >/dev/null 2>&1; [ \$? -eq 4 ]"
 t "falta una variable => rc 2" bash -c "env -i PATH=\$PATH python3 -I tools/fill-properties.py $TMP/pf >/dev/null 2>&1; [ \$? -eq 2 ]"

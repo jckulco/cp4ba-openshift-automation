@@ -40,7 +40,7 @@ if confirm "¿Probar ahora la API key, el proyecto y el modelo contra watsonx.ai
 fi
 
 # --- contraseñas generadas (una sola vez) ---
-for v in PW_DB_GCD PW_DB_OS PW_DB_ICN PW_DB_BAS LTPA_CONTENT KS_CONTENT LTPA_BAN KS_BAN; do
+for v in PW_DB_GCD PW_DB_OS PW_DB_ICN PW_DB_BAS LTPA_CONTENT KS_CONTENT; do
   [ -n "${!v:-}" ] || { printf -v "$v" '%s' "$(gen_pw)"; set_env "$CP4BA_SECRETS_FILE" "$v" "${!v}"; }
 done
 load_env "$LDAP_SECRETS_FILE"
@@ -51,7 +51,7 @@ BK="$STATE_DIR/properties-backup"
 if [ ! -d "$BK" ]; then cp -a "$PROP_DIR" "$BK"; chmod -R go-rwx "$BK"; ok "Copia original en $BK"; fi
 export FILE_SC BLOCK_SC LIC_CP4BA LIC_CONTENT_CORTEX LIC_BAW WXAI_URL WXAI_PROJECT_ID WXAI_MODEL_ID WXAI_API_KEY
 export LDAP_HOST="openldap.${LDAP_NS}.svc.cluster.local" LDAP_PORT=389 LDAP_BASE_DN="dc=example,dc=org"
-export LDAP_ADMIN_PW PW_CP4ADMIN PW_DB_GCD PW_DB_OS PW_DB_ICN PW_DB_BAS LTPA_CONTENT KS_CONTENT LTPA_BAN KS_BAN
+export LDAP_ADMIN_PW PW_CP4ADMIN PW_DB_GCD PW_DB_OS PW_DB_ICN PW_DB_BAS LTPA_CONTENT KS_CONTENT
 python3 -I "$ROOT/tools/fill-properties.py" "$PROP_DIR"
 if python3 -I "$ROOT/tools/fill-properties.py" --check "$PROP_DIR"; then ok "No quedan <Required>"; else die "Quedan <Required> sin rellenar (ver arriba)."; fi
 chmod 600 "$PROP_DIR"/*.property
