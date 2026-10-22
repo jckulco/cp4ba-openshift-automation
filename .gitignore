@@ -9,3 +9,4 @@
 *.log
 *.bak.yaml
 .DS_Store
+__pycache__/

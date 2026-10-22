@@ -32,7 +32,7 @@ Instaló: IBM Cert Manager 4.2.23, Licensing 4.2.24, operadores v26.0.2 (cp4a, c
 ## IA en BAW 🔎 (componentes opcionales de Workflow Authoring, producción)
 | Menú | Clave en el CR | Notas |
 |---|---|---|
-| Workflow Assistant | `workplace_assistant` | comparte `workflow_assistant_configuration` (watsonx) |
+| Workplace Assistant | `workplace_assistant` | agente para usuarios; comparte `workflow_assistant_configuration` (watsonx) |
 | (Preview) Authoring Assistant | `workflow_assistant` | **Preview** |
 | Workflow Runtime MCP Server | `workflow_runtime_mcp_server` | exige `pfs`; con PFS+MCP exige OpenSearch; 📄 endpoints `/process/mcp` y `/case/mcp`, OAuth 2.1 |
 | Data Collector and Data Indexer | `pfs` | |
@@ -43,3 +43,16 @@ Instaló: IBM Cert Manager 4.2.23, Licensing 4.2.24, operadores v26.0.2 (cp4a, c
 
 ## LDAP de laboratorio
 OpenLDAP (osixia) en `cp4ba-ldap`; usuarios `cp4admin`, `alice` (autora), `bob`; grupos `cp4admins`, `tw_admins`, `tw_authors`, `bawusers`. Contraseñas en `.state/ldap-secrets.env`. Los nombres de grupo se ajustarán cuando veamos los property files reales. SOLO laboratorio.
+
+## Respuestas a `cp4a-prerequisites.sh -m property` ✅
+Capacidad: 5a Workflow Authoring (solo) · opcionales: 3 Data Collector and Data Indexer, 5 Workplace Assistant, 6 (Preview) Authoring Assistant, 7 Workflow Runtime MCP Server · watsonx.ai: IBM SaaS (la otra opción es Lightweight Engine) · LDAP: IBM Tivoli/Security Directory Server · StorageClasses: cephfs (slow/medium/fast), rbd (Zen) · perfil small · BD: IBM Cloud Native Postgres (operador) · Vault: No · network policies: No · Instana: No · certificado externo OpenSearch/Kafka: No · Content Cortex AI Services: No.
+- ⚠️ La pantalla mezcló lo escrito y el primer valor de StorageClass quedó truncado (`ocs-storagecluster-ceph`): **siempre revisar los property files** (la fase 04 lo corrige).
+- ⚠️ IBM generó una misma contraseña para todas las BD y se vio en el chat → la fase 04 las rota por otras únicas antes de `generate`.
+
+## Property files (🔎 contenido leído)
+- Seis BD con el operador: gcddb, bawdocs, bawdos, bawtos, icndb, basdb (usuarios gcduser, osuser ×3, icnuser, basuser). Servidor `postgres-cp4ba-rw.{{ meta.namespace }}.svc` lo resuelve el operador.
+- Licencias (📄 comentarios de IBM): CP4BA `non-production|production`; Content Cortex `user, concurrent-user, authorized-user, non-production, production`; BAW `concurrent-user, authorized-user, non-production, production`. **Decisión del usuario.**
+- LDAP: `LDAP_SSL_ENABLED` viene en True → False (OpenLDAP sin TLS). Contraseñas: texto plano si no tienen caracteres especiales; `{Base64}` si los tienen (📄).
+- Watsonx.ai SaaS: `WFA.WATSONX_API_KEY/URL/PROJECT_ID`; modelo opcional, **por defecto meta-llama/llama-3-3-70b-instruct** (📄). ❓ ese modelo puede estar obsoleto en la región: `tools/test-wxai.py` lo comprueba. Con modelo propio (gpt-oss-120b) ❓ no probado con el asistente. Solo existe `RUNTIME_AGENT_WATSONX_DEPLOYMENT_ID` (para despliegue personalizado).
+- Juicios míos sin verificar: `LC_USER_FILTER` por `uid`; SCIM de grupos a `groupOfNames/member`; grupos de workflow admin/config = `cp4admins`; conexión PE `pe_conn_bawtos`. `SCIM.USER_GROUPS_ATTRIBUTE=memberOf` necesita el overlay memberOf de OpenLDAP (❓ puede no estar activo).
+- IBM pide guardar estos archivos tras el despliegue (se usan en upgrades y al añadir/quitar componentes).

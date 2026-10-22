@@ -5,12 +5,12 @@
 #   ./install.sh --force         ignora las marcas de "hecho"
 #   ./install.sh status          fases hechas y pods con problemas
 #   ./install.sh credentials     contraseñas del LDAP de laboratorio (explícito)
-# Fases: 00 configure | 01 bootstrap | 02 ldap | 03 clusteradmin (manual guiado) | 04+ (en construcción, ver docs)
+# Fases: 00 configure | 01 bootstrap | 02 ldap | 03 clusteradmin (manual guiado) | 04 properties | 05+ (en construcción)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=lib/common.sh
 source "$ROOT/lib/common.sh"
-PHASES=(00-configure 01-bootstrap 02-ldap 03-clusteradmin)
+PHASES=(00-configure 01-bootstrap 02-ldap 03-clusteradmin 04-properties)
 FROM=""; ONLY=""; FORCE=0; CMD="all"
 while [ $# -gt 0 ]; do
   case "$1" in

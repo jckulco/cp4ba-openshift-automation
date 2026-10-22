@@ -4,7 +4,7 @@ Proyecto en construcción para preparar un taller de BAW con sus funciones de IA
 (OpenShift 4.21, ODF). Estructura heredada del proyecto de Content Cortex: `install.sh`, fases idempotentes en `phases/`
 (marcas en `.state/done`), `lib/common.sh`, `tools/`, `docs/` y `tests/`.
 
-**Estado real:** fases 00–03 escritas; 03 solo comprueba (el script de IBM es interactivo). Ver `docs/VERIFICATION-STATUS.md`.
+**Estado real:** fases 00–04 escritas; 03 solo comprueba (el script de IBM es interactivo). Ver `docs/VERIFICATION-STATUS.md`.
 Las notas de la sesión, con lo verificado y lo no verificado, están en `docs/SESSION-NOTES.md`.
 
 ```bash
