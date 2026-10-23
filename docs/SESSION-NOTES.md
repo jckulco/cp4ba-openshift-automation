@@ -68,3 +68,20 @@ Capacidad: 5a Workflow Authoring (solo) · opcionales: 3 Data Collector and Data
 - Respuestas: Content CR No · Production · OCP (cluster BareMetal) · AWS/Azure No · cpadmin Yes · JDBC vacío · resumen Yes. El script solo GENERA el CR; se aplica con `oc apply -f .../generated-cr/project/cp4ba/ibm_cp4a_cr_final.yaml`.
 - CR 🔎: ICP4ACluster `icp4adeploy`; sc_optional_components = baw_authoring,cmis,pfs,workflow_assistant,workflow_runtime_mcp_server,workplace_assistant,opensearch (IBM añadió opensearch). Incluye `baml_configuration` (esqueleto de ML Server; sus funciones requieren BAI, que no está) ❓ efecto real: ver pods tras el despliegue.
 - CR aplicado a las 16:36 (hora CDMX). Copia original en /opt/cp4ba/logs/cr-final-original.yaml.
+
+## Login Enterprise LDAP en Zen (✅ diagnosticado en el cluster)
+- Síntoma: `Internal Server Error` en `/auth/login/oidc/callback` tras elegir Enterprise LDAP. cpadmin (IBM provided credentials) entra bien.
+- Logs 🔎: `CWWKS1620E ... Entity incompatible with PersonAccount` (platform-auth-service) y `userId cannot be an array or an object` (platform-identity-provider).
+- Causa: IM mapea `PersonAccount` a objectClass `person` (leído en la config Liberty) pero OpenLDAP no devuelve las clases padre y las entradas solo tenían `inetOrgPerson`.
+- Arreglo: añadir `objectClass: person` explícito a cp4admin/alice/bob (ldapmodify) y en `deploy-ldap.sh` para instalaciones nuevas. ❓ Resultado del login tras el arreglo: pendiente de confirmar.
+- Mi primera hipótesis (ePerson de TDS) era incorrecta.
+
+## Login LDAP en Zen: causa raíz del 401 (✅ resuelto en el cluster, 2026-10-22)
+Cadena de síntomas y qué resultó ser cada cosa:
+1. `Internal Server Error` en `/auth/login/oidc/callback` (`CWWKS1620E Entity incompatible with PersonAccount`): IM mapea `PersonAccount` a objectClass `person` y OpenLDAP no devuelve clases padre; se añadió `objectClass: person` a los usuarios (✅ cambió el error; ya en `deploy-ldap.sh`).
+2. `401 unauthorized_error` (`/auth/login/sso/error`): 🔎 código de usermgmt (`syncNewUserWithBedrock`): un usuario nuevo sin grupo de Zen enlazado a su grupo LDAP se rechaza. La comparación (`ldapGroupsToUserGroups`) es literal: el usuario trae el **DN** (`cn=cp4admins,ou=groups,...`, de SCIM `groups[].value`) y la interfaz guarda como clave el **UUID** del grupo en `user_group_membership_rules`.
+3. Arreglo: cambiar la clave a DN (`tools/fix-zen-ldap-groups.sh`). **No soportado por IBM; solo laboratorio.** ✅ cp4admin entra tras el cambio.
+- Falsas pistas (no eran la causa): roles del grupo, recrear el usuario, reiniciar platform-auth-service, `unauthorized_error` en el identity-provider, el 404 "user not found in zen instances" (es "nothing to do").
+- Error mío: el `[]` de "User groups that user should be a member of" solo refleja reglas por atributos, no grupos LDAP.
+- Procedimiento por cada grupo LDAP: en Zen (cpadmin) crear grupo asignado, añadir "Identity provider groups", asignar roles, y después ejecutar `tools/fix-zen-ldap-groups.sh`.
+- LOG_LEVEL de usermgmt se subió temporalmente a debug/silly y se revirtió a `warn`.

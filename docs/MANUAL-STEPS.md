@@ -8,3 +8,8 @@
 1. Túnel LDAP temporal para `cp4a-deployment.sh` (ver SESSION-NOTES) y limpiar `/etc/hosts` al terminar.
 2. Revisar el CR antes de aplicar; la licencia la acepta quien ejecuta (nunca el instalador).
 3. Espera larga (fase 07), en tmux.
+
+## Enlazar grupos LDAP en Zen (workaround de laboratorio)
+1. Zen como `cpadmin` -> Access control -> User groups -> New (Assigned) -> Users -> *Identity provider groups* -> elegir el grupo LDAP -> asignar roles.
+2. En el bastión: `tools/fix-zen-ldap-groups.sh` (usa `--dry-run` para ver). Corrige la clave UUID -> DN. NO soportado por IBM.
+3. Probar el login del usuario en ventana de incógnito.

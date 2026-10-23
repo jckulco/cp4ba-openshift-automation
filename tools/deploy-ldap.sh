@@ -55,6 +55,7 @@ data:
 
     dn: uid=cp4admin,ou=users,${BASE_DN}
     objectClass: inetOrgPerson
+    objectClass: person
     uid: cp4admin
     cn: CP4BA Admin
     sn: Admin
@@ -63,6 +64,7 @@ data:
 
     dn: uid=alice,ou=users,${BASE_DN}
     objectClass: inetOrgPerson
+    objectClass: person
     uid: alice
     cn: Alice Author
     sn: Author
@@ -71,6 +73,7 @@ data:
 
     dn: uid=bob,ou=users,${BASE_DN}
     objectClass: inetOrgPerson
+    objectClass: person
     uid: bob
     cn: Bob User
     sn: User
