@@ -18,6 +18,6 @@
 | Fases 07-08 (wait, verify) | ⚠️ | escritas, nunca ejecutadas; la heurística de 07 (❓) no se ha contrastado |
 | Login Zen con Enterprise LDAP | ✅ | requiere `objectClass: person` y el workaround `tools/fix-zen-ldap-groups.sh` (no soportado por IBM) |
 | Process Portal y BAStudio con cp4admin | ✅ | workflow automation de prueba creado y abierto |
-| Inicialización de contenido FileNet | ❌ | dominio y object stores creados tras reiniciar CPE; falla `initProcessStore` (FNRPE2130660008E). Ver SESSION-NOTES |
+| Inicialización de contenido FileNet | ❌ | dominio y object stores creados tras reiniciar CPE; falla `initProcessStore` (FNRPE2130660008E); probado sin efecto: memberOf en LDAP, reinicio de IM y CPE. Ver SESSION-NOTES |
 | `tools/enable-ldap-memberof.sh`, `tools/repopulate-ldap-memberof.sh` | ✅ lab | ejecutados en el cluster; memberOf correcto; no resolvieron el FNRPE |
 | Funciones de IA (watsonx.ai), MCP con OAuth, prueba funcional final | pendientes | `tools/test-wxai.py` nunca ejecutada |
