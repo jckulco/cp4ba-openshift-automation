@@ -61,3 +61,10 @@ Capacidad: 5a Workflow Authoring (solo) · opcionales: 3 Data Collector and Data
 - IBM exige `CONTENT.LTPA_PASSWORD` == `BAN.LTPA_PASSWORD` (se igualan también los keystore por prudencia ❓). La fase 04 original los generaba distintos → corregido en `fill-properties.py`.
 - ⚠️ La validación de IBM **imprime los valores** cuando falla: no pegar al chat la salida de `generate`/`validate` sin revisarla. (Las dos LTPA de esa corrida se expusieron y se rotaron.)
 - Con `postgresql-edb` IBM omite la validación de certificados de BD; con LDAP sin SSL omite la del LDAP.
+
+## Despliegue (✅ ejecutado en el cluster, 2026-10-22)
+- `validate`: almacenamiento y 5 secretos PASSED. LDAP falla desde el bastión (DNS interno); ✅ con `oc port-forward svc/openldap 13389:389` + LdapTest.jar el bind funciona. ⚠️ el puerto 3389 lo ocupa RDP en el bastión.
+- `cp4a-deployment.sh -n cp4ba` valida el LDAP desde el bastión y **aborta** si no resuelve: solución temporal ✅ = `/etc/hosts` (127.0.0.1 -> nombre interno) + `oc port-forward svc/openldap 389:389`; limpiar después.
+- Respuestas: Content CR No · Production · OCP (cluster BareMetal) · AWS/Azure No · cpadmin Yes · JDBC vacío · resumen Yes. El script solo GENERA el CR; se aplica con `oc apply -f .../generated-cr/project/cp4ba/ibm_cp4a_cr_final.yaml`.
+- CR 🔎: ICP4ACluster `icp4adeploy`; sc_optional_components = baw_authoring,cmis,pfs,workflow_assistant,workflow_runtime_mcp_server,workplace_assistant,opensearch (IBM añadió opensearch). Incluye `baml_configuration` (esqueleto de ML Server; sus funciones requieren BAI, que no está) ❓ efecto real: ver pods tras el despliegue.
+- CR aplicado a las 16:36 (hora CDMX). Copia original en /opt/cp4ba/logs/cr-final-original.yaml.
