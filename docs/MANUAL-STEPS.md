@@ -13,3 +13,9 @@
 1. Zen como `cpadmin` -> Access control -> User groups -> New (Assigned) -> Users -> *Identity provider groups* -> elegir el grupo LDAP -> asignar roles.
 2. En el bastión: `tools/fix-zen-ldap-groups.sh` (usa `--dry-run` para ver). Corrige la clave UUID -> DN. NO soportado por IBM.
 3. Probar el login del usuario en ventana de incógnito.
+
+## Si la inicialización de contenido falla (observado, no documentado por IBM)
+1. `oc get cm icp4adeploy-initialization-config -n cp4ba -o jsonpath='{.data}'` debe terminar con `cpe_initialized: True`.
+2. Si `gcddb` está vacío y el operador falla en `Create Content Process Engine P8 Domain` con `FNRCD0019E`: ❓ reiniciar una vez el pod de CPE (guardar antes sus logs) hizo que se creara el dominio. No es un procedimiento soportado.
+3. Si falla `Configure Workflow for Object Store` con `FNRPE2130660008E`: sin resolver; abrir caso con IBM (ver SESSION-NOTES).
+4. OpenLDAP del laboratorio: el overlay memberof de osixia viene para `groupOfUniqueNames`; los grupos del laboratorio son `groupOfNames`. `tools/repopulate-ldap-memberof.sh` lo corrige (laboratorio).

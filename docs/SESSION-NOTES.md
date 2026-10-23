@@ -85,3 +85,16 @@ Cadena de síntomas y qué resultó ser cada cosa:
 - Error mío: el `[]` de "User groups that user should be a member of" solo refleja reglas por atributos, no grupos LDAP.
 - Procedimiento por cada grupo LDAP: en Zen (cpadmin) crear grupo asignado, añadir "Identity provider groups", asignar roles, y después ejecutar `tools/fix-zen-ldap-groups.sh`.
 - LOG_LEVEL de usermgmt se subió temporalmente a debug/silly y se revirtió a `warn`.
+
+## Inicialización de contenido (FileNet/CPE): bloqueada (investigado en el cluster, 2026-10-22/23)
+Estado: ❌ sin resolver. BAStudio y Process Portal funcionan con cp4admin; Case Builder, repositorios de Navigator y el contenido de documentos NO.
+- Síntoma: Navigator sin repositorios (solo Admin Desktop), Case Builder "Content Platform Engine server is not available". Zen/BAStudio "current user didn't load properly" fue transitorio (se resolvió solo).
+- ConfigMap `icp4adeploy-initialization-config` 🔎: `cpe_initialized=False`, `nav_initialized` pasó a True tras reiniciar CPE.
+- Operador de contenido 🔎: falla la tarea `Create Content Process Engine P8 Domain` (fncm-cpe-ums-init.yaml:157) al instante; llama `POST /cpe/init/v1/domain`. CPE: `[CPERestAPI] Failure occurred fetching domain: P8DOMAIN` por `FNRCD0019E ... relation "fngcd" does not exist` (gcddb con 0 tablas). No hay tarea previa que prepare el GCD.
+- ✅ Tras reiniciar el pod de CPE una vez, el dominio se creó (gcddb: cpeservers, fngcd, fngcd_addon) y los tres object stores (bawdocs 89, bawdos 83, bawtos 105 tablas). Causa del primer fallo: ❓ desconocida (estado del primer arranque de CPE).
+- Nuevo bloqueo, persistente: tarea `API POST call to Configure Workflow for Object Store` (BAWTOS) falla con `[FNRPE2130660008E] User "cp4admin" does not have permission to perform function` en `EJBPEUtils.checkAdminUserSecurity` (`EJB_rpc_initProcessStore.initializeRegion`, FFDC leído en el pod de CPE).
+- Credencial que CPE ve para cp4admin 🔎: solo permisos de Zen como grupos (administrator, can_provision, manage_users, ... sign_in_only); NINGÚN grupo LDAP (no aparece cp4admins, que es el grupo admin/config del workflow en el CR).
+- Hipótesis descartadas ✅: permisos de PostgreSQL (gcduser es dueño de gcddb, CREATE en public), tablespace bawtos_tbs (existe), timeout (falla en 2-4 s), identidad del login (CPE autentica a cp4admin con role Admin).
+- Hipótesis probada sin efecto: `memberOf` en OpenLDAP. 🔎 El overlay memberof existía pero con `groupOfUniqueNames/uniqueMember` (defecto osixia); se cambió a `groupOfNames/member` y se repobló (`tools/repopulate-ldap-memberof.sh`): cp4admin tiene memberOf correcto. Tras eso, dos reinicios/ciclos del operador (≈25 min) siguen fallando igual. ❓ puede haber caché de IAM no vencida; no se probó reiniciar IM.
+- Pendiente: caso IBM con estos datos, o probar reiniciar platform-auth/identity-management y reintentar. El tablespace y el overlay quedan como están (reversibles: `enable-ldap-memberof.sh --remove`).
+- Errores de procedimiento míos: pod de PostgreSQL embebido es `postgres-cp4ba-*` (no `postgresql-edb`); `zen-core-svc` escucha en 3443 (no 4000).

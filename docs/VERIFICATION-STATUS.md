@@ -14,4 +14,10 @@
 | `cp4a-prerequisites.sh -m property` (a mano, guiado) | ✅ | archivos generados con las respuestas de SESSION-NOTES |
 | Fase 04 `properties` + `tools/fill-properties.py` | 🧪 | probada offline con property files reconstruidos de la salida real; nunca ejecutada contra los archivos reales |
 | `tools/test-wxai.py` | ⚠️ | nunca ejecutada |
-| Fases 05+ (generate, validate, despliegue, IA, prueba funcional) | pendientes | |
+| Fases 05-06 (generate, deploy) | ✅ a mano | CR generado y aplicado; ICP4ACluster Ready=True (~4 h). Los scripts de fase 05-08 siguen sin ejecutarse contra el cluster |
+| Fases 07-08 (wait, verify) | ⚠️ | escritas, nunca ejecutadas; la heurística de 07 (❓) no se ha contrastado |
+| Login Zen con Enterprise LDAP | ✅ | requiere `objectClass: person` y el workaround `tools/fix-zen-ldap-groups.sh` (no soportado por IBM) |
+| Process Portal y BAStudio con cp4admin | ✅ | workflow automation de prueba creado y abierto |
+| Inicialización de contenido FileNet | ❌ | dominio y object stores creados tras reiniciar CPE; falla `initProcessStore` (FNRPE2130660008E). Ver SESSION-NOTES |
+| `tools/enable-ldap-memberof.sh`, `tools/repopulate-ldap-memberof.sh` | ✅ lab | ejecutados en el cluster; memberOf correcto; no resolvieron el FNRPE |
+| Funciones de IA (watsonx.ai), MCP con OAuth, prueba funcional final | pendientes | `tools/test-wxai.py` nunca ejecutada |
